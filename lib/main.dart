@@ -5,34 +5,37 @@ import 'providers/todo_model.dart';
 import 'services/database/database_helper.dart';
 import 'screens/todo_list_page.dart';
 
+// Entry point of the application
 void main() async {
-  // Ensure Flutter is initialized
+  // Ensure Flutter is initialized before using platform channels
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Create database helper
+  // Initialize the database
   final dbHelper = DatabaseHelper();
   await dbHelper.initDatabase();
   
+  // Run the app with TodoModel provider
   runApp(
     ChangeNotifierProvider(
       create: (context) => TodoModel(dbHelper),
-      child: const MainApp(),
+      child: const TodoApp(),
     ),
   );
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+// Root widget of the application
+class TodoApp extends StatelessWidget {
+  const TodoApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Simple To-Do List', 
-      home: const TodoListPage(),
+      title: 'Todo List App',
       theme: ThemeData(
         primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
+        useMaterial3: true,
       ),
+      home: const TodoListPage(),
     );
   }
 }
