@@ -11,7 +11,7 @@ void main() {
 }
 
 class TodoModel extends ChangeNotifier {
-  List<String> _tasks = [];
+  final List<String> _tasks = [];
 
   List<String> get tasks => _tasks;
 
@@ -31,10 +31,7 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Simple To-Do List',
-      home: const TodoListPage(),
-    );
+    return MaterialApp(title: 'Simple To-Do List', home: const TodoListPage());
   }
 }
 
@@ -62,13 +59,15 @@ class TodoListPage extends StatelessWidget {
             TextButton(
               onPressed: () {
                 if (taskController.text.trim().isNotEmpty) {
-                  Provider.of<TodoModel>(context, listen: false)
-                      .addTask(taskController.text.trim());
+                  Provider.of<TodoModel>(
+                    context,
+                    listen: false,
+                  ).addTask(taskController.text.trim());
                 }
                 Navigator.of(context).pop();
               },
               child: const Text('Add'),
-            )
+            ),
           ],
         );
       },
@@ -79,26 +78,27 @@ class TodoListPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final tasks = Provider.of<TodoModel>(context).tasks;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('My To-Do List'),
-      ),
-      body: tasks.isEmpty
-          ? const Center(child: Text("No tasks yet!"))
-          : ListView.builder(
-              itemCount: tasks.length,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  title: Text(tasks[index]),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete),
-                    onPressed: () {
-                      Provider.of<TodoModel>(context, listen: false)
-                          .removeTask(index);
-                    },
-                  ),
-                );
-              },
-            ),
+      appBar: AppBar(title: const Text('My To-Do List')),
+      body:
+          tasks.isEmpty
+              ? const Center(child: Text("No tasks yet!"))
+              : ListView.builder(
+                itemCount: tasks.length,
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    title: Text(tasks[index]),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete),
+                      onPressed: () {
+                        Provider.of<TodoModel>(
+                          context,
+                          listen: false,
+                        ).removeTask(index);
+                      },
+                    ),
+                  );
+                },
+              ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _addTask(context),
         child: const Icon(Icons.add),
