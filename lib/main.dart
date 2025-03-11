@@ -78,6 +78,14 @@ class _TodoListPageState extends State<TodoListPage> {
               itemBuilder: (context, index) {
                 return ListTile(
                   title: Text(tasks[index]),
+                  trailing: IconButton(
+                    icon: Icon(Icons.delete),
+                    onPressed: () {
+                      setState(() {
+                        tasks.removeAt(index);
+                      });
+                    },
+                  ),
                 );
               },
             ),
