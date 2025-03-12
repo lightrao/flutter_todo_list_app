@@ -10,7 +10,27 @@ class TodoListPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('My To-Do List')),
+      appBar: AppBar(
+        title: const Text('My To-Do List'),
+        actions: [
+          Consumer<TodoModel>(
+            builder: (context, todoModel, _) {
+              // Only show the clear button if there are tasks
+              if (todoModel.tasks.isEmpty) {
+                return const SizedBox.shrink();
+              }
+              
+              return IconButton(
+                icon: const Icon(Icons.delete_sweep),
+                tooltip: 'Clear All',
+                onPressed: () {
+                  _showClearConfirmationDialog(context);
+                },
+              );
+            },
+          ),
+        ],
+      ),
 
       // Display tasks or empty state message
       body: Consumer<TodoModel>(builder: (context, todoModel, _) {
@@ -46,6 +66,32 @@ class TodoListPage extends StatelessWidget {
         onPressed: () {
           Provider.of<TodoModel>(context, listen: false).removeTask(index);
         },
+      ),
+    );
+  }
+  
+  // Show confirmation dialog before clearing all tasks
+  void _showClearConfirmationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Clear All Tasks'),
+        content: const Text(
+          'Are you sure you want to delete all tasks? This action cannot be undone.'
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Provider.of<TodoModel>(context, listen: false).clearAllTasks();
+              Navigator.of(ctx).pop();
+            },
+            child: const Text('Clear All'),
+          ),
+        ],
       ),
     );
   }

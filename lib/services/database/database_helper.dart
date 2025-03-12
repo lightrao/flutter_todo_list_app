@@ -47,6 +47,12 @@ class DatabaseHelper {
     return await db.delete(tableName, where: 'id = ?', whereArgs: [id]);
   }
 
+  // Delete all tasks from database
+  Future<int> deleteAllTasks() async {
+    final db = await database;
+    return await db.delete(tableName);
+  }
+
   // Close the database connection
   Future<void> closeDatabase() async {
     final db = _database;

@@ -44,4 +44,11 @@ class TodoModel extends ChangeNotifier {
       notifyListeners();
     }
   }
+  
+  // Clear all tasks from memory and database
+  Future<void> clearAllTasks() async {
+    await _dbHelper.deleteAllTasks();
+    _tasks.clear();
+    notifyListeners();
+  }
 } 
