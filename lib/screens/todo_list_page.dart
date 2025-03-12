@@ -11,25 +11,24 @@ class TodoListPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('My To-Do List')),
-      
+
       // Display tasks or empty state message
-      body: Consumer<TodoModel>(
-        builder: (context, todoModel, child) {
-          final tasks = todoModel.tasks;
-          
-          if (tasks.isEmpty) {
-            return const Center(
-              child: Text("No tasks yet! Tap + to add a task."),
-            );
-          }
-          
-          return ListView.builder(
-            itemCount: tasks.length,
-            itemBuilder: (context, index) => _buildTaskItem(context, tasks, index),
+      body: Consumer<TodoModel>(builder: (context, todoModel, _) {
+        final tasks = todoModel.tasks;
+
+        if (tasks.isEmpty) {
+          return const Center(
+            child: Text("No tasks yet! Tap + to add a task."),
           );
         }
-      ),
-      
+
+        return ListView.builder(
+          itemCount: tasks.length,
+          itemBuilder: (context, index) =>
+              _buildTaskItem(context, tasks, index),
+        );
+      }),
+
       // Add task button
       floatingActionButton: FloatingActionButton(
         onPressed: () => AddTaskDialog.show(context),
@@ -37,7 +36,7 @@ class TodoListPage extends StatelessWidget {
       ),
     );
   }
-  
+
   // Build a single task list item
   Widget _buildTaskItem(BuildContext context, tasks, int index) {
     return ListTile(
@@ -50,4 +49,4 @@ class TodoListPage extends StatelessWidget {
       ),
     );
   }
-} 
+}
