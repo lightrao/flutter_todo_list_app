@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/todo_model.dart';
 import '../widgets/add_task_dialog.dart';
+import '../services/file_service.dart';
 
 // Main screen displaying the list of tasks
 class TodoListPage extends StatelessWidget {
@@ -13,6 +14,20 @@ class TodoListPage extends StatelessWidget {
       appBar: AppBar(
         title: const Text('My To-Do List'),
         actions: [
+          // Import button
+          IconButton(
+            icon: const Icon(Icons.file_upload),
+            tooltip: 'Import Tasks',
+            onPressed: () => _importTasks(context),
+          ),
+          
+          // Export button
+          IconButton(
+            icon: const Icon(Icons.file_download),
+            tooltip: 'Export Tasks',
+            onPressed: () => _exportTasks(context),
+          ),
+          
           Consumer<TodoModel>(
             builder: (context, todoModel, _) {
               // Only show the clear button if there are tasks
@@ -67,6 +82,88 @@ class TodoListPage extends StatelessWidget {
           Provider.of<TodoModel>(context, listen: false).removeTask(index);
         },
       ),
+    );
+  }
+  
+  // Export tasks to a JSON file
+  Future<void> _exportTasks(BuildContext context) async {
+    try {
+      final todoModel = Provider.of<TodoModel>(context, listen: false);
+      
+      // Show loading indicator
+      _showLoadingDialog(context, 'Exporting tasks...');
+      
+      // Export tasks to JSON
+      final jsonData = todoModel.exportTasksToJson();
+      final filePath = await FileService.exportToJson(jsonData);
+      
+      // Close loading dialog
+      Navigator.of(context, rootNavigator: true).pop();
+      
+      // Show success or error message
+      if (filePath != null) {
+        _showSnackBar(context, 'Tasks exported to: $filePath');
+      } else {
+        _showSnackBar(context, 'Failed to export tasks');
+      }
+    } catch (e) {
+      // Close loading dialog and show error
+      Navigator.of(context, rootNavigator: true).pop();
+      _showSnackBar(context, 'Error: ${e.toString()}');
+    }
+  }
+  
+  // Import tasks from a JSON file
+  Future<void> _importTasks(BuildContext context) async {
+    try {
+      // Show loading indicator
+      _showLoadingDialog(context, 'Importing tasks...');
+      
+      // Import tasks from JSON
+      final jsonString = await FileService.importFromJson();
+      
+      // Close loading dialog
+      Navigator.of(context, rootNavigator: true).pop();
+      
+      if (jsonString != null) {
+        // Import the tasks into the model
+        await Provider.of<TodoModel>(context, listen: false)
+            .importTasksFromJson(jsonString);
+        
+        _showSnackBar(context, 'Tasks imported successfully');
+      } else {
+        _showSnackBar(context, 'No file selected or import failed');
+      }
+    } catch (e) {
+      // Close loading dialog and show error
+      Navigator.of(context, rootNavigator: true).pop();
+      _showSnackBar(context, 'Error importing: ${e.toString()}');
+    }
+  }
+  
+  // Show a loading dialog
+  void _showLoadingDialog(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: Row(
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(width: 20),
+              Text(message),
+            ],
+          ),
+        );
+      },
+    );
+  }
+  
+  // Show a snackbar with a message
+  void _showSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
     );
   }
   
