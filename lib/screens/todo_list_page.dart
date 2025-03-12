@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/todo_model.dart';
 import '../widgets/add_task_dialog.dart';
-import '../services/file_service.dart';
-import 'dart:io';
 
 // Main screen displaying the list of tasks
 class TodoListPage extends StatelessWidget {
@@ -15,21 +13,6 @@ class TodoListPage extends StatelessWidget {
       appBar: AppBar(
         title: const Text('My To-Do List'),
         actions: [
-          // Import button
-          IconButton(
-            icon: const Icon(Icons.upload_file),
-            tooltip: 'Import Tasks',
-            onPressed: () => _showImportDialog(context),
-          ),
-          
-          // Export button
-          IconButton(
-            icon: const Icon(Icons.download),
-            tooltip: 'Export Tasks',
-            onPressed: () => _showExportDialog(context),
-          ),
-          
-          // Clear all button
           Consumer<TodoModel>(
             builder: (context, todoModel, _) {
               // Only show the clear button if there are tasks
@@ -111,123 +94,5 @@ class TodoListPage extends StatelessWidget {
         ],
       ),
     );
-  }
-  
-  // Show dialog for importing tasks
-  void _showImportDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Import Tasks'),
-        content: const Text('Choose a file format to import'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              _importTasks(context, 'json');
-            },
-            child: const Text('JSON'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              _importTasks(context, 'csv');
-            },
-            child: const Text('CSV'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
-          ),
-        ],
-      ),
-    );
-  }
-  
-  // Import tasks from a file
-  Future<void> _importTasks(BuildContext context, String fileType) async {
-    try {
-      final String? filePath = await FileService.pickFile(
-        allowedExtensions: [fileType],
-      );
-      
-      if (filePath != null) {
-        final todoModel = Provider.of<TodoModel>(context, listen: false);
-        
-        if (fileType == 'json') {
-          await todoModel.importTasksFromJson(filePath);
-        } else if (fileType == 'csv') {
-          await todoModel.importTasksFromCsv(filePath);
-        }
-        
-        // Show success message
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Tasks imported successfully')),
-          );
-        }
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error importing tasks: ${e.toString()}')),
-        );
-      }
-    }
-  }
-  
-  // Show dialog for exporting tasks
-  void _showExportDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Export Tasks'),
-        content: const Text('Choose a file format to export'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              _exportTasks(context, 'json');
-            },
-            child: const Text('JSON'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              _exportTasks(context, 'csv');
-            },
-            child: const Text('CSV'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
-          ),
-        ],
-      ),
-    );
-  }
-  
-  // Export tasks to a file
-  Future<void> _exportTasks(BuildContext context, String fileType) async {
-    try {
-      final todoModel = Provider.of<TodoModel>(context, listen: false);
-      File exportedFile;
-      
-      if (fileType == 'json') {
-        exportedFile = await todoModel.exportTasksToJson();
-      } else {
-        exportedFile = await todoModel.exportTasksToCsv();
-      }
-      
-      // Share the exported file
-      await FileService.shareFile(exportedFile);
-      
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error exporting tasks: ${e.toString()}')),
-        );
-      }
-    }
   }
 }

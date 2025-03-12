@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/task.dart';
 import '../services/database/database_helper.dart';
-import 'dart:convert';
-import 'dart:io';
-import 'package:path_provider/path_provider.dart';
 
 // Manages the state of tasks and provides database operations
 class TodoModel extends ChangeNotifier {
@@ -53,87 +50,5 @@ class TodoModel extends ChangeNotifier {
     await _dbHelper.deleteAllTasks();
     _tasks.clear();
     notifyListeners();
-  }
-  
-  // Export tasks to a JSON file
-  Future<File> exportTasksToJson() async {
-    final directory = await getApplicationDocumentsDirectory();
-    final path = '${directory.path}/todo_tasks_${DateTime.now().millisecondsSinceEpoch}.json';
-    
-    // Convert tasks to a list of maps
-    final List<Map<String, dynamic>> tasksMap = _tasks.map((task) => {
-      'title': task.title,
-    }).toList();
-    
-    // Convert to JSON and write to file
-    final jsonString = jsonEncode(tasksMap);
-    return File(path).writeAsString(jsonString);
-  }
-  
-  // Export tasks to a CSV file
-  Future<File> exportTasksToCsv() async {
-    final directory = await getApplicationDocumentsDirectory();
-    final path = '${directory.path}/todo_tasks_${DateTime.now().millisecondsSinceEpoch}.csv';
-    
-    // Create CSV header
-    final csvContent = StringBuffer('id,title\n');
-    
-    // Add each task
-    for (var task in _tasks) {
-      csvContent.writeln('${task.id},${task.title}');
-    }
-    
-    // Write to file
-    return File(path).writeAsString(csvContent.toString());
-  }
-  
-  // Import tasks from a JSON file
-  Future<void> importTasksFromJson(String filePath) async {
-    try {
-      final file = File(filePath);
-      if (await file.exists()) {
-        final jsonString = await file.readAsString();
-        final List<dynamic> tasksList = jsonDecode(jsonString);
-        
-        // Clear existing tasks
-        await clearAllTasks();
-        
-        // Add imported tasks
-        for (var taskMap in tasksList) {
-          await addTask(taskMap['title']);
-        }
-      }
-    } catch (e) {
-      rethrow; // Let the UI handle the error
-    }
-  }
-  
-  // Import tasks from a CSV file
-  Future<void> importTasksFromCsv(String filePath) async {
-    try {
-      final file = File(filePath);
-      if (await file.exists()) {
-        final csvString = await file.readAsString();
-        final lines = csvString.split('\n');
-        
-        // Skip header line and remove empty lines
-        final taskLines = lines.sublist(1).where((line) => line.trim().isNotEmpty);
-        
-        // Clear existing tasks
-        await clearAllTasks();
-        
-        // Add imported tasks
-        for (var line in taskLines) {
-          final parts = line.split(',');
-          if (parts.length >= 2) {
-            // The title might contain commas, so join all parts after the first
-            final title = parts.sublist(1).join(',').trim();
-            await addTask(title);
-          }
-        }
-      }
-    } catch (e) {
-      rethrow; // Let the UI handle the error
-    }
   }
 } 
