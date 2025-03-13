@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:io';
 import '../providers/todo_model.dart';
 import '../widgets/add_task_dialog.dart';
 import '../services/file_service.dart';
@@ -118,7 +119,10 @@ class TodoListPage extends StatelessWidget {
       
       // Show success or error message
       if (filePath != null) {
-        _showSnackBar(context, 'Tasks exported to: $filePath');
+        final message = Platform.isAndroid 
+            ? 'Tasks exported to Downloads folder: ${filePath.split('/').last}'
+            : 'Tasks exported to: $filePath';
+        _showSnackBar(context, message);
       } else {
         _showSnackBar(context, 'Storage permission required for exporting tasks');
       }

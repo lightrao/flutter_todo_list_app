@@ -8,7 +8,6 @@ import 'package:permission_handler/permission_handler.dart';
 class FileService {
   // Get appropriate storage permission based on platform
   static Future<PermissionStatus> _getStoragePermission() async {
-    // For Android 13+ (API level 33+), use more granular permissions
     if (Platform.isAndroid) {
       // For Android, check both storage permissions
       final status = await [
@@ -16,7 +15,7 @@ class FileService {
         Permission.manageExternalStorage,
       ].request();
       
-      // Return the most restrictive status
+      // On Android 10+ we really need the manageExternalStorage permission for Downloads
       if (status[Permission.manageExternalStorage] != null && 
           status[Permission.manageExternalStorage]!.isGranted) {
         return PermissionStatus.granted;
@@ -44,12 +43,30 @@ class FileService {
         return null; // Return null to indicate export failure due to permissions
       }
 
-      // Get documents directory
-      final directory = await getApplicationDocumentsDirectory();
-
       // Create filename with timestamp
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final path = '${directory.path}/todo_list_$timestamp.json';
+      final fileName = 'todo_list_$timestamp.json';
+      String? path;
+      
+      if (Platform.isAndroid) {
+        // On Android, save to Downloads directory
+        final directory = Directory('/storage/emulated/0/Download');
+        // Make sure the directory exists
+        if (!await directory.exists()) {
+          await directory.create(recursive: true);
+        }
+        path = '${directory.path}/$fileName';
+      } else if (Platform.isIOS) {
+        // On iOS, we need to use the documents directory then share the file
+        // as iOS doesn't have a direct "Downloads" concept
+        final directory = await getApplicationDocumentsDirectory();
+        path = '${directory.path}/$fileName';
+      } else {
+        // Fallback for other platforms
+        final directory = await getDownloadsDirectory() ?? 
+                          await getApplicationDocumentsDirectory();
+        path = '${directory.path}/$fileName';
+      }
 
       // Write the file
       final file = File(path);
