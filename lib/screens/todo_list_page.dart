@@ -87,77 +87,113 @@ class TodoListPage extends StatelessWidget {
   
   // Export tasks to a JSON file
   Future<void> _exportTasks(BuildContext context) async {
-    try {
-      final todoModel = Provider.of<TodoModel>(context, listen: false);
-      
-      // Show loading indicator
-      _showLoadingDialog(context, 'Exporting tasks...');
-      
+    final todoModel = Provider.of<TodoModel>(context, listen: false);
+    
+    if (todoModel.tasks.isEmpty) {
+      _showSnackBar(context, 'No tasks to export');
+      return;
+    }
+    
+    // Show loading indicator
+    final loadingDialogShown = _showLoadingDialog(context, 'Preparing to export...');
+    
+    try {      
       // Export tasks to JSON
       final jsonData = todoModel.exportTasksToJson();
-      final filePath = await FileService.exportToJson(jsonData);
       
-      // Close loading dialog
-      Navigator.of(context, rootNavigator: true).pop();
+      // Close the loading dialog if it's shown
+      if (loadingDialogShown) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+      
+      // Show a new loading dialog for the actual export
+      _showLoadingDialog(context, 'Exporting tasks...');
+      
+      final filePath = await FileService.exportToJson(jsonData, context);
+      
+      // Always close loading dialog
+      if (Navigator.of(context, rootNavigator: true).canPop()) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
       
       // Show success or error message
       if (filePath != null) {
         _showSnackBar(context, 'Tasks exported to: $filePath');
       } else {
-        _showSnackBar(context, 'Failed to export tasks');
+        _showSnackBar(context, 'Storage permission required for exporting tasks');
       }
     } catch (e) {
-      // Close loading dialog and show error
-      Navigator.of(context, rootNavigator: true).pop();
+      // Make sure loading dialog is closed
+      if (Navigator.of(context, rootNavigator: true).canPop()) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
       _showSnackBar(context, 'Error: ${e.toString()}');
     }
   }
   
   // Import tasks from a JSON file
   Future<void> _importTasks(BuildContext context) async {
+    // Show loading indicator
+    final loadingDialogShown = _showLoadingDialog(context, 'Preparing to import...');
+    
     try {
-      // Show loading indicator
-      _showLoadingDialog(context, 'Importing tasks...');
-      
       // Import tasks from JSON
-      final jsonString = await FileService.importFromJson();
+      final jsonString = await FileService.importFromJson(context);
       
-      // Close loading dialog
-      Navigator.of(context, rootNavigator: true).pop();
+      // Close the loading dialog if it's shown
+      if (loadingDialogShown) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
       
       if (jsonString != null) {
+        // Show a new loading dialog for the actual import
+        _showLoadingDialog(context, 'Importing tasks...');
+        
         // Import the tasks into the model
         await Provider.of<TodoModel>(context, listen: false)
             .importTasksFromJson(jsonString);
         
+        // Always close loading dialog
+        if (Navigator.of(context, rootNavigator: true).canPop()) {
+          Navigator.of(context, rootNavigator: true).pop();
+        }
+        
         _showSnackBar(context, 'Tasks imported successfully');
       } else {
-        _showSnackBar(context, 'No file selected or import failed');
+        _showSnackBar(context, 'Storage permission required for importing tasks');
       }
     } catch (e) {
-      // Close loading dialog and show error
-      Navigator.of(context, rootNavigator: true).pop();
+      // Make sure loading dialog is closed
+      if (Navigator.of(context, rootNavigator: true).canPop()) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
       _showSnackBar(context, 'Error importing: ${e.toString()}');
     }
   }
   
   // Show a loading dialog
-  void _showLoadingDialog(BuildContext context, String message) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          content: Row(
-            children: [
-              const CircularProgressIndicator(),
-              const SizedBox(width: 20),
-              Text(message),
-            ],
-          ),
-        );
-      },
-    );
+  bool _showLoadingDialog(BuildContext context, String message) {
+    try {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            content: Row(
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(width: 20),
+                Text(message),
+              ],
+            ),
+          );
+        },
+      );
+      return true;
+    } catch (e) {
+      debugPrint('Error showing dialog: $e');
+      return false;
+    }
   }
   
   // Show a snackbar with a message
