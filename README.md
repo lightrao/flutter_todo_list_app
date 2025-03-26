@@ -1,15 +1,18 @@
 # Flutter Todo List App
 
-A simple, elegant, and feature-rich Todo List application built with Flutter. This app helps you manage your daily tasks with ease.
+A simple, elegant, and feature-rich Todo List application built with Flutter. This app helps you manage your daily tasks with ease and efficiency.
 
 ## Features
 
 - ✅ Create, view, and delete tasks
+- 🔄 Update existing tasks
 - 🗑️ Clear all tasks with a single tap
 - 📤 Export your tasks to a JSON file
 - 📥 Import tasks from a JSON file
-- 💾 Persistent storage using SQLite database
+- 💾 Persistent storage using SQLite database with optimized queries
 - 🎨 Clean and intuitive Material Design UI
+- 🛠️ Well-structured code with singleton pattern for database operations
+- 🔒 Memory-efficient task management with proper resource disposal
 
 ## Screenshots
 
@@ -17,12 +20,21 @@ A simple, elegant, and feature-rich Todo List application built with Flutter. Th
 
 ## Technologies Used
 
-- Flutter - UI framework
-- Provider - State management
-- SQLite (sqflite) - Local database storage
-- Path Provider - File system access
-- File Picker - Import/export functionality
-- Permission Handler - Manage storage permissions
+- **Flutter** - UI framework (version 3.2.0+)
+- **Provider** - State management
+- **SQLite (sqflite)** - Local database storage
+- **Path Provider** - File system access
+- **File Picker** - Import/export functionality
+- **Permission Handler** - Manage storage permissions
+
+## Architecture
+
+This application follows a well-structured architecture:
+
+- **Models Layer**: Clean data models with conversion methods
+- **Services Layer**: Singleton database helper with optimized queries
+- **Provider Layer**: State management with proper lifecycle handling
+- **UI Layer**: Separated screens and reusable widgets
 
 ## Getting Started
 
@@ -57,6 +69,7 @@ A simple, elegant, and feature-rich Todo List application built with Flutter. Th
 ## Usage
 
 - **Add a task**: Tap the floating action button and enter your task
+- **Update a task**: Tap on an existing task to edit its details
 - **Delete a task**: Swipe the task to delete it
 - **Clear all tasks**: Tap the broom icon in the app bar
 - **Export tasks**: Tap the download icon to save your tasks as a JSON file
@@ -64,11 +77,32 @@ A simple, elegant, and feature-rich Todo List application built with Flutter. Th
 
 ## Project Structure
 
-- `lib/models/` - Data models
-- `lib/providers/` - State management
-- `lib/screens/` - UI screens
-- `lib/services/` - Database and file operations
-- `lib/widgets/` - Reusable UI components
+```
+lib/
+├── main.dart           # Entry point of the application
+├── models/             # Data models
+│   └── task.dart       # Task model with database mapping
+├── providers/          # State management
+│   └── todo_model.dart # Manages task state and db operations
+├── screens/            # UI screens
+│   └── todo_list_page.dart
+├── services/           # Business logic and services
+│   ├── file_service.dart
+│   └── database/
+│       └── database_helper.dart  # SQLite database operations
+└── widgets/            # Reusable UI components
+    └── add_task_dialog.dart
+```
+
+## Code Quality Features
+
+- **Singleton Pattern**: Efficient database management
+- **Proper Encapsulation**: Private methods and variables
+- **Resource Management**: Database connections properly closed
+- **Documentation**: Well-documented code with descriptive comments
+- **Null Safety**: Proper handling of nullable types
+- **Clean Architecture**: Separation of concerns between layers
+- **Efficient Queries**: Optimized database operations
 
 ## Contributing
 
@@ -82,3 +116,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 - Flutter team for the amazing framework
 - All the package authors that made this project possible
+- Last updated: March 2025
