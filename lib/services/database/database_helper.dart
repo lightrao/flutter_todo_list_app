@@ -6,16 +6,21 @@ import '../../models/task.dart';
 class DatabaseHelper {
   static Database? _database;
   static const String tableName = 'tasks';
+  
+  // Constructor - can be used to initialize the database
+  DatabaseHelper() {
+    // Initialize database lazily through the getter
+  }
 
   // Get the database instance, creating it if needed
   Future<Database> get database async {
     if (_database != null) return _database!;
-    _database = await initDatabase();
+    _database = await _initDatabase();
     return _database!;
   }
 
   // Initialize the database
-  Future<Database> initDatabase() async {
+  Future<Database> _initDatabase() async {
     final path = join(await getDatabasesPath(), 'todo_database.db');
 
     return await openDatabase(
