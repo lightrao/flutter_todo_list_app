@@ -5,76 +5,81 @@ import '../../models/task.dart';
 /// DatabaseHelper class that handles all database operations for the todo app.
 /// Follows the singleton pattern to ensure a single instance is used throughout the app.
 class DatabaseHelper {
-  // Singleton instance
+  // Singleton pattern implementation
   static final DatabaseHelper _instance = DatabaseHelper._internal();
-  
-  // Database instance
-  static Database? _database;
-  
-  // Table name as a constant
-  static const String tableName = 'tasks';
-  
-  // Factory constructor to return the singleton instance
-  factory DatabaseHelper() {
-    return _instance;
-  }
-  
-  // Named private constructor for internal use
+  factory DatabaseHelper() => _instance;
   DatabaseHelper._internal();
+  
+  // Database and table constants
+  static Database? _database;
+  static const String _tableName = 'tasks';
+  static const String _columnId = 'id';
+  static const String _columnTitle = 'title';
+  static const String _databaseName = 'todo_database.db';
+  static const int _databaseVersion = 1;
 
   /// Gets the database instance, creating it if needed
   Future<Database> get database async {
-    if (_database != null) return _database!;
-    _database = await _initDatabase();
-    return _database!;
+    return _database ??= await _initDatabase();
   }
 
   /// Initializes the database - private implementation
   Future<Database> _initDatabase() async {
-    final path = join(await getDatabasesPath(), 'todo_database.db');
+    final path = join(await getDatabasesPath(), _databaseName);
 
     return await openDatabase(
       path,
-      version: 1,
-      onCreate: (db, version) async {
-        await db.execute(
-            'CREATE TABLE $tableName(id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT)');
-      },
+      version: _databaseVersion,
+      onCreate: _onCreate,
     );
+  }
+  
+  /// Creates the database tables
+  Future<void> _onCreate(Database db, int version) async {
+    await db.execute('''
+      CREATE TABLE $_tableName(
+        $_columnId INTEGER PRIMARY KEY AUTOINCREMENT, 
+        $_columnTitle TEXT NOT NULL
+      )
+    ''');
   }
 
   /// Gets all tasks from database
   Future<List<Task>> getTasks() async {
     final db = await database;
-    final maps = await db.query(tableName);
-    return maps.map((map) => Task.fromMap(map)).toList();
+    final maps = await db.query(_tableName);
+    return List.generate(maps.length, (i) => Task.fromMap(maps[i]));
   }
 
   /// Adds a task to database
   Future<int> insertTask(Task task) async {
     final db = await database;
-    return await db.insert(tableName, task.toMap());
+    return await db.insert(_tableName, task.toMap());
   }
 
   /// Deletes a task from database by ID
   Future<int> deleteTask(int id) async {
     final db = await database;
-    return await db.delete(tableName, where: 'id = ?', whereArgs: [id]);
+    return await db.delete(
+      _tableName, 
+      where: '$_columnId = ?', 
+      whereArgs: [id],
+    );
   }
 
   /// Deletes all tasks from database
   Future<int> deleteAllTasks() async {
     final db = await database;
-    return await db.delete(tableName);
+    return await db.delete(_tableName);
   }
   
   /// Updates an existing task
   Future<int> updateTask(Task task) async {
     final db = await database;
     return await db.update(
-      tableName,
+      _tableName,
       task.toMap(),
-      where: 'id = ?',
+      where: '$_columnId = ?',
       whereArgs: [task.id],
     );
   }
@@ -83,21 +88,19 @@ class DatabaseHelper {
   Future<Task?> getTaskById(int id) async {
     final db = await database;
     final maps = await db.query(
-      tableName,
-      where: 'id = ?',
+      _tableName,
+      where: '$_columnId = ?',
       whereArgs: [id],
+      limit: 1,
     );
     
-    if (maps.isNotEmpty) {
-      return Task.fromMap(maps.first);
-    }
-    return null;
+    return maps.isNotEmpty ? Task.fromMap(maps.first) : null;
   }
 
   /// Closes the database connection
   Future<void> closeDatabase() async {
     final db = _database;
-    if (db != null) {
+    if (db != null && db.isOpen) {
       await db.close();
       _database = null;
     }
