@@ -3,7 +3,7 @@ import 'dart:convert';
 import '../models/task.dart';
 import '../services/database/database_helper.dart';
 
-// Manages the state of tasks and provides database operations
+/// Manages the state of tasks and provides database operations
 class TodoModel extends ChangeNotifier {
   final DatabaseHelper _dbHelper;
   List<Task> _tasks = [];
@@ -20,7 +20,7 @@ class TodoModel extends ChangeNotifier {
   }
 
   // Getter for tasks list
-  List<Task> get tasks => _tasks;
+  List<Task> get tasks => List.unmodifiable(_tasks);
 
   // Add a new task
   Future<void> addTask(String title) async {
@@ -34,6 +34,15 @@ class TodoModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Remove a task by ID
+  Future<void> removeTaskById(int? taskId) async {
+    if (taskId == null) return;
+    
+    await _dbHelper.deleteTask(taskId);
+    _tasks.removeWhere((task) => task.id == taskId);
+    notifyListeners();
+  }
+
   // Remove a task at given index
   Future<void> removeTask(int index) async {
     if (index < 0 || index >= _tasks.length) return;
@@ -42,6 +51,18 @@ class TodoModel extends ChangeNotifier {
     if (taskId != null) {
       await _dbHelper.deleteTask(taskId);
       _tasks.removeAt(index);
+      notifyListeners();
+    }
+  }
+
+  // Update an existing task
+  Future<void> updateTask(Task task) async {
+    if (task.id == null) return;
+    
+    await _dbHelper.updateTask(task);
+    final index = _tasks.indexWhere((t) => t.id == task.id);
+    if (index != -1) {
+      _tasks[index] = task;
       notifyListeners();
     }
   }
@@ -80,5 +101,12 @@ class TodoModel extends ChangeNotifier {
       debugPrint('Error importing tasks: $e');
       rethrow; // Rethrow to handle in UI
     }
+  }
+  
+  @override
+  void dispose() {
+    // Close database connection when model is disposed
+    _dbHelper.closeDatabase();
+    super.dispose();
   }
 }
