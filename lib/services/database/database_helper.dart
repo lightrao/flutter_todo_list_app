@@ -7,9 +7,10 @@ import '../../models/task.dart';
 class DatabaseHelper {
   // Singleton pattern implementation
   static final DatabaseHelper _instance = DatabaseHelper._internal();
-  factory DatabaseHelper() => _instance;
   DatabaseHelper._internal();
   
+  factory DatabaseHelper() => _instance;
+
   // Database and table constants
   static Database? _database;
   static const String _tableName = 'tasks';
@@ -33,7 +34,7 @@ class DatabaseHelper {
       onCreate: _onCreate,
     );
   }
-  
+
   /// Creates the database tables
   Future<void> _onCreate(Database db, int version) async {
     await db.execute('''
@@ -61,8 +62,8 @@ class DatabaseHelper {
   Future<int> deleteTask(int id) async {
     final db = await database;
     return await db.delete(
-      _tableName, 
-      where: '$_columnId = ?', 
+      _tableName,
+      where: '$_columnId = ?',
       whereArgs: [id],
     );
   }
@@ -72,7 +73,7 @@ class DatabaseHelper {
     final db = await database;
     return await db.delete(_tableName);
   }
-  
+
   /// Updates an existing task
   Future<int> updateTask(Task task) async {
     final db = await database;
@@ -93,7 +94,7 @@ class DatabaseHelper {
       whereArgs: [id],
       limit: 1,
     );
-    
+
     return maps.isNotEmpty ? Task.fromMap(maps.first) : null;
   }
 
