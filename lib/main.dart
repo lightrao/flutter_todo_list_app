@@ -13,7 +13,7 @@ void main() async {
   // Initialize the database
   final dbHelper = DatabaseHelper();
   // Access the database to ensure it's initialized
-  await dbHelper.database;
+  // await dbHelper.database;
   
   // Run the app with TodoModel provider
   runApp(
