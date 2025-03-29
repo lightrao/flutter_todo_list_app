@@ -1,5 +1,8 @@
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
+import 'package:file_saver/file_saver.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -19,7 +22,7 @@ class FileService {
     }
   }
 
-  // Export data to a JSON file
+  // Export data to a JSON file using file_saver
   static Future<String?> exportToJson(String jsonData, BuildContext context) async {
     try {
       // Request appropriate storage permission
@@ -34,38 +37,30 @@ class FileService {
         return null; // Return null to indicate export failure due to permissions
       }
 
-      // Create filename with timestamp
+      // Create suggested filename with timestamp
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final fileName = 'todo_list_$timestamp.json';
-      String? path;
-      
-      if (Platform.isAndroid) {
-        // On Android, save to Downloads directory
-        final directory = Directory('/storage/emulated/0/Download');
-        // Make sure the directory exists
-        if (!await directory.exists()) {
-          await directory.create(recursive: true);
-        }
-        path = '${directory.path}/$fileName';
-      } else if (Platform.isIOS) {
-        // On iOS, we need to use the documents directory then share the file
-        // as iOS doesn't have a direct "Downloads" concept
-        final directory = await getApplicationDocumentsDirectory();
-        path = '${directory.path}/$fileName';
-      } else {
-        // Fallback for other platforms
-        final directory = await getDownloadsDirectory() ?? 
-                          await getApplicationDocumentsDirectory();
-        path = '${directory.path}/$fileName';
-      }
+      // Suggest a base name, the user can change it in the save dialog
+      final fileName = 'todo_list_$timestamp'; 
 
-      // Write the file
-      final file = File(path);
-      await file.writeAsString(jsonData);
+      // Convert String data to Uint8List
+      final bytes = utf8.encode(jsonData);
 
-      return path;
+      // Use file_saver to open the save dialog
+      // The user chooses the final location and confirms the name.
+      String? savedPath = await FileSaver.instance.saveAs(
+        name: fileName, // Suggested name
+        bytes: bytes,
+        ext: 'json', // File extension
+        // Using MimeType.text as JSON is text-based.
+        // Alternatively, could use MimeType.other and customMimeType: 'application/json'
+        mimeType: MimeType.text, 
+      );
+
+      // file_saver returns the path if saved, null if cancelled/failed.
+      return savedPath; 
+
     } catch (e) {
-      debugPrint('Error exporting file: $e');
+      debugPrint('Error exporting file with file_saver: $e');
       return null;
     }
   }
