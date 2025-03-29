@@ -8,19 +8,11 @@ class FileService {
   // Get appropriate storage permission based on platform
   static Future<PermissionStatus> _getStoragePermission() async {
     if (Platform.isAndroid) {
-      // For Android, check both storage permissions
-      final status = await [
-        Permission.storage,
-        Permission.manageExternalStorage,
-      ].request();
-      
-      // On Android 10+ we really need the manageExternalStorage permission for Downloads
-      if (status[Permission.manageExternalStorage] != null && 
-          status[Permission.manageExternalStorage]!.isGranted) {
-        return PermissionStatus.granted;
-      }
-      
-      return status[Permission.storage] ?? PermissionStatus.denied;
+      // For Android 10 (API 29) and above, request manageExternalStorage 
+      // if broad file access (like Downloads) is needed.
+      // Note: This permission requires special declaration in AndroidManifest.xml
+      // and justification for Google Play Store review.
+      return await Permission.manageExternalStorage.request();      
     } else {
       // For iOS and other platforms
       return await Permission.storage.request();
