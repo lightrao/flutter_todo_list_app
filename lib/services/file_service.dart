@@ -1,10 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:file_saver/file_saver.dart';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class FileService {
@@ -51,9 +49,9 @@ class FileService {
         name: fileName, // Suggested name
         bytes: bytes,
         ext: 'json', // File extension
-        // Using MimeType.text as JSON is text-based.
-        // Alternatively, could use MimeType.other and customMimeType: 'application/json'
-        mimeType: MimeType.text, 
+        // Use MimeType.other and specify the JSON mime type explicitly
+        mimeType: MimeType.other, 
+        customMimeType: 'application/json',
       );
 
       // file_saver returns the path if saved, null if cancelled/failed.
